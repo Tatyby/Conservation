@@ -1,11 +1,8 @@
-import javax.xml.crypto.dsig.spec.XSLTTransformParameterSpec;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.ObjectOutputStream;
+import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
 
 public class Main {
@@ -17,6 +14,8 @@ public class Main {
         String way1 = "C:\\Users\\in_sd\\IdeaProjects\\Installation\\Games\\savegames\\save1.dat";
         String way2 = "C:\\Users\\in_sd\\IdeaProjects\\Installation\\Games\\savegames\\save2.dat";
         String way3 = "C:\\Users\\in_sd\\IdeaProjects\\Installation\\Games\\savegames\\save3.dat";
+        String nameZip = "C:\\Users\\in_sd\\IdeaProjects\\Installation\\Games\\savegames\\zip.zip";
+        String nameWay = "C:\\Users\\in_sd\\IdeaProjects\\Installation\\Games\\savegames\\";
 
         saveGame(way1, gameProgress1);
         saveGame(way2, gameProgress2);
@@ -27,10 +26,15 @@ public class Main {
         listForZip.add(way2);
         listForZip.add(way3);
 
-        zipFiles("C:\\Users\\in_sd\\IdeaProjects\\Installation\\Games\\savegames\\zip.zip", listForZip);
+        zipFiles(nameZip, listForZip);
 
         fileDelete(listForZip);
 
+        openZip(nameZip, nameWay);
+
+        openProgress(way1);
+        openProgress(way2);
+        openProgress(way3);
 
     }
 
@@ -82,6 +86,40 @@ public class Main {
                 System.out.println("Файл удален: " + getNameFile(lists) + " по пути: " + lists);
             } else System.out.println("Файла  не обнаружено: " + getNameFile(lists));
         }
+
+    }
+
+    public static void openZip(String nameZip, String nameWay) {
+        try (ZipInputStream zin = new ZipInputStream(new
+                FileInputStream(nameZip))) {
+            ZipEntry entry;
+            String name;
+            while ((entry = zin.getNextEntry()) != null) {
+                name = entry.getName();
+                FileOutputStream fout = new FileOutputStream(nameWay + name);
+                for (int c = zin.read(); c != -1; c = zin.read()) {
+                    fout.write(c);
+                }
+                fout.flush();
+                zin.closeEntry();
+                fout.close();
+            }
+        } catch (Exception ex) {
+            System.out.println(ex.getMessage());
+
+        }
+    }
+
+    public static GameProgress openProgress(String way) {
+        GameProgress gameProgress = null;
+        try (FileInputStream fis = new FileInputStream(way);
+             ObjectInputStream ois = new ObjectInputStream(fis)) {
+            gameProgress = (GameProgress) ois.readObject();
+        } catch (Exception ex) {
+            System.out.println(ex.getMessage());
+        }
+        System.out.println(gameProgress);
+        return gameProgress;
 
     }
 
